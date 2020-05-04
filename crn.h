@@ -13,6 +13,7 @@
 #include <random>
 #include <cmath>
 #include <ctime>
+#include <cassert>
 #include <cstdlib>
 #include <boost/algorithm/string.hpp>
 #include <cstdlib>
@@ -37,6 +38,7 @@ public:
 
     inline vector <Species> parseSpecies(string a);
     double calculateProp(unordered_map<string,int> &m);
+    int adjustCount(unordered_map<string,int> &m);
     static void printSpecies(vector <Species> &v);
     void print();
 

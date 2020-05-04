@@ -15,6 +15,6 @@ int main() {
     rsys.setConc("y",n/2);
     rsys.setConc("b",0);
     rsys.print();
-    //rsys.simulate(50);
+    rsys.simulate(20.0);
 }
 

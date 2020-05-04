@@ -23,10 +23,11 @@ int CRN::setConc(string species_name, int init_count) {
 }
 
 int CRN::simulate(int tmax) {
+    cout<<"-------start simulation--------"<<endl;
     //C++11 random number generator (0,1)
     random_device rd;
     mt19937 mt(rd());
-    uniform_real_distribution<double> dist(1.0, 10.0);
+    uniform_real_distribution<double> dist(0.0, 1.0);
     //dist(mt) will be in (0,1)
 
     unordered_map<string,int> cur_count(s_count);
@@ -35,18 +36,35 @@ int CRN::simulate(int tmax) {
     int num_reactions = reactions.size();
     vector<double> propensities(num_reactions);
     while(cur_time < max_time){
+        cout<<"++++++++++at "<<cur_time<<"+++++++++"<<endl;
         double a0{};
         //propensity for each reaction
         for(int i=0;i<num_reactions;i++){
             propensities[i] = reactions[i].calculateProp(s_count);
+            reactions[i].print();
+            cout<<propensities[i]<<endl;
             a0 += propensities[i];
         }
         //calculate a-1
-        double mu = (1/(double)a0)*log(1/dist(mt));
-        double r = a0 * ((double) dist(mt) / (RAND_MAX));
-        cur_time += 1.0;
-
+        double tau = (1/(double)a0)*log(1/dist(mt));
+        double r = a0 * (double) dist(mt);
+        cur_time += tau;
+        //find reaction index
+        int mu = 0;//mu is the selected index of reaction
+        double sum = 0.0;
+        for(;sum<=r;mu++){
+            sum += propensities[mu];
+        }
+        mu--;
+        assert(sum>r);
+        cout<<"tau="<<tau<<"; r="<<r<<"; a0="<<a0<<"; mu="<<mu<<endl;
+        cout<<"selected reaction";
+        reactions[mu].print();
+        //adjust count
+        reactions[mu].adjustCount(s_count);
+        SaveFrame(cur_time);
     }
+    SaveResult("output.csv");
 }
 
 int CRN::clear() {
@@ -77,6 +95,7 @@ void CRN::SaveResult(const string &filename) {
     }
     outfile<<"\n";
     for(const Frame& i:simulation_result){
+        outfile<<i.time<<",";
         for(int c:i.counts){
             outfile<<c<<",";
         }
@@ -140,6 +159,7 @@ double Reaction::calculateProp(unordered_map<string, int> &m) {
     for(const Species& i:reactant){
         int factor = i.factor;
         int s_count = m[i.name];
+        if(s_count<factor) return 0.0; //cannot carry reaction
         result *= pow((double)s_count,(double)factor);
     }
     return result;
@@ -159,4 +179,16 @@ void Reaction::print() {
    printSpecies(product) ;
    cout<< "rate="<<lambda<<endl;
 
+}
+
+int Reaction::adjustCount(unordered_map<string, int> &m) {
+    for(Species r:reactant){
+       m[r.name] -= r.factor;
+       assert(m[r.name]>=0);
+    }
+    for(Species r:product){
+        m[r.name] += r.factor;
+        assert(m[r.name]>=0);
+    }
+    return 0;
 }
