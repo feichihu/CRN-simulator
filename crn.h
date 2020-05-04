@@ -55,7 +55,7 @@ public:
 
     int setConc(string species_name, int init_count);
 
-    int simulate(int tmax);
+    int simulate(int tmax, bool verbose=false);
 
     int print();
 

@@ -23,7 +23,7 @@ int CRN::setConc(string species_name, int init_count) {
     s_count[species_name] = init_count;
 }
 
-int CRN::simulate(int tmax) {
+int CRN::simulate(int tmax, bool verbose) {
     cout<<"-------start simulation--------"<<endl;
     //C++11 random number generator (0,1)
     random_device rd;
@@ -38,13 +38,17 @@ int CRN::simulate(int tmax) {
     vector<double> propensities(num_reactions);
     saveFrame(cur_time);
     while(cur_time < max_time){
-        cout<<"++++++++++at "<<cur_time<<"+++++++++"<<endl;
+        if(verbose){
+            cout<<"++++++++++at "<<cur_time<<"+++++++++"<<endl;
+        }
         double a0{};
         //propensity for each reaction
         for(int i=0;i<num_reactions;i++){
             propensities[i] = reactions[i].calculateProp(s_count);
-            reactions[i].print();
-            cout<<propensities[i]<<endl;
+            if(verbose){
+                reactions[i].print();
+                cout<<propensities[i]<<endl;
+            }
             a0 += propensities[i];
         }
         if(tmax<=0 && a0==0.0){
@@ -64,9 +68,15 @@ int CRN::simulate(int tmax) {
         }
         mu--;
         assert(sum>r);
-        cout<<"tau="<<tau<<"; r="<<r<<"; a0="<<a0<<"; mu="<<mu<<endl;
-        cout<<"selected reaction";
-        reactions[mu].print();
+        if(verbose){
+            cout<<"tau="<<tau<<"; r="<<r<<"; a0="<<a0<<"; mu="<<mu<<endl;
+            cout<<"selected reaction";
+            reactions[mu].print();
+        }
+        if(max_time<cur_time){
+            cout<<"Simulation terminates."<<endl;
+            cout<<"total time elapsed:"<<cur_time<<endl;
+        }
         //adjust count
         reactions[mu].adjustCount(s_count);
         saveFrame(cur_time);
@@ -129,8 +139,8 @@ int CRN::print() {
 Reaction::Reaction(const string &r, const string& p, double l) {
     reactant = parseSpecies(r);
     product = parseSpecies(p);
-    cout << r << " is converted to " << endl;
-    printSpecies(reactant);
+    //cout << r << " is converted to " << endl;
+    //printSpecies(reactant);
 
     lambda = l;
 }
@@ -141,7 +151,7 @@ vector<Species> Reaction::parseSpecies(string a) {
     Species t;
     split(temp, a, is_any_of("+"));//may need escape
     for (string s:temp) {
-        cout<<"parsing:"<<s<<endl;
+        //cout<<"parsing:"<<s<<endl;
         int i = 0;
         for (; i < s.size(); i++) {
             if (!isdigit(s[i]))
