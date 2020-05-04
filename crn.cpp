@@ -7,6 +7,7 @@
 #include "crn.h"
 
 using namespace std;
+#define DEFAULT_MAX_TIME 50000.0 //max time when tmax not specified
 
 CRN::CRN() {
 
@@ -31,10 +32,11 @@ int CRN::simulate(int tmax) {
     //dist(mt) will be in (0,1)
 
     unordered_map<string,int> cur_count(s_count);
-    double max_time = (double) tmax;
+    double max_time = tmax>0? (double) tmax : DEFAULT_MAX_TIME;
     double cur_time = 0;
     int num_reactions = reactions.size();
     vector<double> propensities(num_reactions);
+    saveFrame(cur_time);
     while(cur_time < max_time){
         cout<<"++++++++++at "<<cur_time<<"+++++++++"<<endl;
         double a0{};
@@ -44,6 +46,11 @@ int CRN::simulate(int tmax) {
             reactions[i].print();
             cout<<propensities[i]<<endl;
             a0 += propensities[i];
+        }
+        if(tmax<=0 && a0==0.0){
+            cout<<"No further reaction occurs, simulation terminates."<<endl;
+            cout<<"total time elapsed:"<<cur_time<<endl;
+            break;
         }
         //calculate a-1
         double tau = (1/(double)a0)*log(1/dist(mt));
@@ -62,9 +69,8 @@ int CRN::simulate(int tmax) {
         reactions[mu].print();
         //adjust count
         reactions[mu].adjustCount(s_count);
-        SaveFrame(cur_time);
+        saveFrame(cur_time);
     }
-    SaveResult("output.csv");
 }
 
 int CRN::clear() {
@@ -72,7 +78,7 @@ int CRN::clear() {
 
 }
 
-void CRN::SaveFrame(double cur_time) {
+void CRN::saveFrame(double cur_time) {
     if(species.empty()){
         for(auto i:s_count){
             species.push_back(i.first);
@@ -85,7 +91,7 @@ void CRN::SaveFrame(double cur_time) {
     simulation_result.push_back(f);
 }
 
-void CRN::SaveResult(const string &filename) {
+void CRN::saveResult(const string &filename) {
     ofstream outfile;
     cout<<"Saving simulation result to "<<filename<<endl;
     outfile.open(filename);

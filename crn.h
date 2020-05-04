@@ -59,6 +59,8 @@ public:
 
     int print();
 
+    void saveResult(const string& filename);
+
     int clear();
 
 
@@ -76,8 +78,7 @@ private:
     vector <Reaction> reactions;
     vector<Frame> simulation_result;
     vector<string> species; //All species in the reaction
-    void SaveFrame(double cur_time);
-    void SaveResult(const string& filename);
+    void saveFrame(double cur_time);
 
 
 
