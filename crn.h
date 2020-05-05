@@ -19,11 +19,20 @@
 #include <queue>
 #include <boost/algorithm/string.hpp>
 #include <cstdlib>
+#include <chrono>
+#include "matplotlibcpp.h"
 
 using namespace std;
 using namespace boost;
+using namespace std::chrono;
+namespace plt = matplotlibcpp;
 
 struct Species {
+    Species(){};
+    Species(const string& s, const int fa){
+        name = s;
+        factor = fa;
+    }
     string name;
     int factor = 1;
 };
@@ -98,6 +107,8 @@ public:
     int setConc(string species_name, int init_count);
 
     int simulate(int tmax, bool verbose=false, string mode="DM");//DM or NRM
+
+    int plot(const string name);
 
 
     int print();

@@ -34,6 +34,8 @@ int CRN::simulate(int tmax, bool verbose, string mode) {
     random_device rd;
     mt19937 mt(rd());
     uniform_real_distribution<double> dist(0.0, 1.0);
+    //timing
+    auto start = high_resolution_clock::now();
     //dist(mt) will be in (0,1)
     if(mode=="DM"){
         double max_time = tmax>0? (double) tmax : DEFAULT_MAX_TIME;
@@ -149,10 +151,45 @@ int CRN::simulate(int tmax, bool verbose, string mode) {
 
 
     }
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop-start);
+    cout<<"simulation duration(computation time)="<<duration.count()<<"ms"<<endl;
 }
 
 int CRN::clear() {
     s_count.clear();
+
+}
+
+int CRN::plot(const string name) {
+    if(simulation_result.empty()){
+        cout<<"No simulation result found, run simulate() first!"<<endl;
+        return 0;
+    }
+    vector<double> time;
+    int num_spec = s_count.size();
+    vector<vector<double>> counts(num_spec);
+    for(Frame &f:simulation_result){
+       time.push_back(f.time);
+       for(int i=0;i<num_spec;i++){
+           counts[i].push_back((double)f.counts[i]);
+       }
+    }
+    //plt::figure_size(1200, 780);
+    for(int i=0;i<num_spec;i++){
+        // Set the size of output image to 1200x780 pixels
+        // Plot a red dashed line from given x and y data.
+        //plt::plot(x, counts[i],"r--");
+        // Plot a line whose name will show up as "log(x)" in the legend.
+        plt::named_plot(species[i], time, counts[i]);
+    }
+    // Add graph title
+    plt::title(name);
+    // Enable legend.
+    plt::legend();
+    // Save the image (file format is determined by the extension)
+    plt::save("./"+name+".png");
+    plt::show();
 
 }
 
@@ -245,6 +282,7 @@ Reaction::Reaction(const string &r, const string& p, double l,int id) {
 
 vector<Species> Reaction::parseSpecies(string a) {
     vector <Species> result;
+    if(a.empty()) return result;
     vector <string> temp;
     Species t;
     split(temp, a, is_any_of("+"));//may need escape
@@ -260,9 +298,9 @@ vector<Species> Reaction::parseSpecies(string a) {
             exit(EXIT_FAILURE);
         }
         if(i>0)
-            result.push_back({ s.substr(i),stoi(s.substr(0,i))});
+            result.emplace_back( s.substr(i),stoi(s.substr(0,i)));
         else
-            result.push_back({ s.substr(i), 1});
+            result.emplace_back( s.substr(i), 1);
 
     }
     return result;

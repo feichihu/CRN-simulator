@@ -17,6 +17,7 @@ int main() {
     rsys.print();
     //tmax==0 will continue until no further reaction occur
     rsys.simulate(0, false, "NRM");
+    rsys.plot("demo");
     rsys.saveResult("output.csv");
 }
 
