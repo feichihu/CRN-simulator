@@ -16,7 +16,7 @@ int main() {
     rsys.setConc("b",0);
     rsys.print();
     //tmax==0 will continue until no further reaction occur
-    rsys.simulate(0, false);
+    rsys.simulate(0, false, "NRM");
     rsys.saveResult("output.csv");
 }
 

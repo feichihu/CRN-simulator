@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <fstream>
 #include <random>
@@ -15,6 +16,7 @@
 #include <ctime>
 #include <cassert>
 #include <cstdlib>
+#include <queue>
 #include <boost/algorithm/string.hpp>
 #include <cstdlib>
 
@@ -25,8 +27,47 @@ struct Species {
     string name;
     int factor = 1;
 };
+struct Slot{
+    Slot(int& a, double& b){
+       tau = b;
+       reaction_idx = a;
+    }
+    Slot(){};
+    int reaction_idx=-1;
+    double tau=0.0;
+    int seq = 0;
+};
+struct comparator{
+    bool operator()(const Slot& a, const Slot& b){
+       return a.tau>b.tau;
+
+    }
+};
+
+class PriorityQ{
+    //priority queue with update keys
+public:
+    PriorityQ();
+
+    PriorityQ(vector<Slot>& s);
+
+    void push(Slot a);
+
+    Slot pop();
+
+    Slot top();
+
+    void print();
+
+    void clean();
+
+    bool verifyTop();
 
 
+private:
+    priority_queue<Slot,vector<Slot>,comparator> pq;
+    vector<int> cur_seq;
+};
 
 
 class Reaction {
@@ -34,7 +75,7 @@ public:
     Reaction();
 
 
-    Reaction(const string &r, const string &p, double l);
+    Reaction(const string &r, const string &p, double l, int id);
 
     inline vector <Species> parseSpecies(string a);
     double calculateProp(unordered_map<string,int> &m);
@@ -44,6 +85,7 @@ public:
 
     vector <Species> reactant;
     vector <Species> product;
+    int idx;
     double lambda=1.0;
 };
 
@@ -55,12 +97,14 @@ public:
 
     int setConc(string species_name, int init_count);
 
-    int simulate(int tmax, bool verbose=false);
+    int simulate(int tmax, bool verbose=false, string mode="DM");//DM or NRM
+
 
     int print();
 
     void saveResult(const string& filename);
 
+    void generateDependency();
     int clear();
 
 
@@ -78,6 +122,7 @@ private:
     vector <Reaction> reactions;
     vector<Frame> simulation_result;
     vector<string> species; //All species in the reaction
+    vector<vector<int>> dependencyList;
     void saveFrame(double cur_time);
 
 
